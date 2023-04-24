@@ -1,0 +1,40 @@
+<%- include('header') -%>
+<%- include('home') -%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="text-center center-div" id="login">
+        <div class="container w-25 border py-5">
+            <div class="title pb-5">
+                <h2 class="font-weight-bold">Login Here</h2>
+                <span>Log in for the existing user</span>
+               
+                    <div class="form-group">
+                        <input type="email" class="form-control mt-3 py-1" placeholder="Enter Channer Url..." value="this" name="email">
+                        <!-- <small class="form-text text-muted text-left">Register email address</small> -->
+                    </div>
+            </div>
+                <a type="submit" href=""  class="btn btn-success rounded-pill">Login</a>
+        </div>
+    </div>
+    <script>
+        const email = document.getElementsByName("email")
+        email[0].addEventListener("blur",async()=>{
+            const formdata = new FormData()
+            formdata.append("channel",email[0].value)
+                const fetchdata = await fetch("/findchannel",{
+                    method:"post",
+                    body:formdata
+                })
+                const resp  = await fetchdata.json()
+
+        })
+    </script>
+</body>
+</html>
