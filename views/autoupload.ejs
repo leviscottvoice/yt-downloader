@@ -19,6 +19,9 @@
                         <input type="email" class="form-control mt-3 py-1" placeholder="Enter Channer Url..." value="this" name="email">
                         <!-- <small class="form-text text-muted text-left">Register email address</small> -->
                     </div>
+                    <div class="channel">
+
+                    </div>
             </div>
                 <a type="submit" href=""  class="btn btn-success rounded-pill">Login</a>
         </div>
@@ -33,6 +36,13 @@
                     body:formdata
                 })
                 const resp  = await fetchdata.json()
+                console.log(resp)
+                if(resp.status == 1){
+                    const channel = document.getElementsByClassName("channel")
+                    const image = document.createElement("img")
+                    image.src = resp.result.authorThumbnails[2].url
+                    channel[0].appendChild(image)
+                }
 
         })
     </script>

@@ -123,7 +123,7 @@ app.post("/findchannel",form,async(req,res)=>{
   const channelid = await channelId(req.body.channel)
   ytch.getChannelInfo({channelId:channelid}).then((response) => {
     if (!response.alertMessage) {
-       console.log(response)
+       res.json({status:1,message:"Channel Found",result:response})
     } else {
        console.log('Channel could not be found.')
        // throw response.alertMessage
