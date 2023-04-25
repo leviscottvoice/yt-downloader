@@ -12,8 +12,10 @@ const fs = require("fs")
 const path = require("path")
 const {channelId,videoId}  = require("@gonetone/get-youtube-id-by-url")
 const ytch = require('yt-channel-info')
+const youtubesearchapi = require('youtube-search-api')
 app.set('view engine', 'ejs')
-
+const axios = require("axios")
+const cherrio = require("cheerio")
 
 app.use(cookieparser())
 app.use(session({
@@ -38,6 +40,18 @@ const categoryIds = {
 
 app.use('/static', express.static(path.join(__dirname, 'public')))
 app.use('/assets', express.static(path.join(__dirname, 'public/assets')))
+
+async function getHTML(productURL) {
+  const { data: html } = await  axios.get(productURL, {
+  headers: {
+  'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'
+}
+})
+.catch(function (error) {
+  console.log(error);
+});
+return html;
+}
 app.get("/",(req,res)=>{
   if(!req?.session?.token){
     const authUrl = oauth2Client.generateAuthUrl({
@@ -121,8 +135,35 @@ app.get("/linkupload",(req,res)=>{
 })
 app.post("/findchannel",form,async(req,res)=>{
   const channelid = await channelId(req.body.channel)
-  ytch.getChannelInfo({channelId:channelid}).then((response) => {
+  const s = await youtubesearchapi.GetChannelById(channelid)
+  
+  // 
+  {/* const youtube = google.youtube({
+    version:"v3",
+    auth:oauth2Client
+  })
+  youtube.search.list({ auth: oauth2Client, part: 'snippet', 
+  channelId: channelid, type:'video',
+  order:'date', maxResults:10 
+}, 
+function(err, response) {
+  console.log(err)
+  // console.log(response)
+}
+); */}
+  ytch.getChannelInfo({channelId:channelid}).then(async(response) => {
     if (!response.alertMessage) {
+      // console.log(response)
+      const data = await getHTML(`https://www.googleapis.com/youtube/v3/search?key=AIzaSyBlO79AaaK7z0HsMRYgOb9uS7dfmsF6NPg&type=video&channelId=${channelid}&part=snippet,id&order=date&maxResults=20`)
+      console.log(data)
+    
+      // console.log($("#contents ytd-rich-grid-media div ytd-thumbnail a").attr())
+      // $('ytd-rich-item-renderer div ').each((idx,el)=>{
+      //   const shelf = $(el)
+      //   console.log(shelf.find("ytd-rich-grid-media div ytd-thumbnail a").attr())
+      //   console.log(shelf)
+
+      // })
        res.json({status:1,message:"Channel Found",result:response})
     } else {
        console.log('Channel could not be found.')

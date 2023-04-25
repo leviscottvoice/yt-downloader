@@ -13,6 +13,8 @@
   "dependencies": {
     "@gonetone/get-youtube-id-by-url": "^1.0.0",
     "assert": "^2.0.0",
+    "axios": "^1.3.6",
+    "cheerio": "^1.0.0-rc.12",
     "cookie-parser": "^1.4.6",
     "ejs": "^3.1.9",
     "express": "^4.18.2",
@@ -24,6 +26,7 @@
     "path": "^0.12.7",
     "readline": "^1.3.0",
     "session": "^0.1.0",
+    "youtube-search-api": "^1.1.1",
     "yt-channel-info": "^3.2.1"
   }
 }
