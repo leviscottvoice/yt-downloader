@@ -15,7 +15,8 @@ const ytch = require('yt-channel-info')
 const youtubesearchapi = require('youtube-search-api')
 app.set('view engine', 'ejs')
 const axios = require("axios")
-const cherrio = require("cheerio")
+const ytdl = require("ytdl-core")
+
 
 app.use(cookieparser())
 app.use(session({
@@ -155,7 +156,12 @@ function(err, response) {
     if (!response.alertMessage) {
       // console.log(response)
       const data = await getHTML(`https://www.googleapis.com/youtube/v3/search?key=AIzaSyBlO79AaaK7z0HsMRYgOb9uS7dfmsF6NPg&type=video&channelId=${channelid}&part=snippet,id&order=date&maxResults=20`)
-      console.log(data)
+      // const file = await ytdl.getInfo(data.items[0].id.videoId,{})
+      // console.log(file)
+      // const video = await ytdl.chooseFormat(file.formats,{quality:"highest"})
+      // console.log(video)
+     const s = await  ytdl.getBasicInfo(data.items[0].id.videoId,{downloadURL: true})
+      console.log(s)
     
       // console.log($("#contents ytd-rich-grid-media div ytd-thumbnail a").attr())
       // $('ytd-rich-item-renderer div ').each((idx,el)=>{
@@ -173,69 +179,69 @@ function(err, response) {
     console.log(err)
  })
 })
-app.get("/callback",(req,res)=>{
-    const token = req.query.code
-    if(token){
-        oauth2Client.getToken(token,(err,tokens )=>{
-          if(err) throw err
-          oauth2Client.setCredentials(tokens)
-          req.session.token = token
-          res.redirect("/")
-        })
+// app.get("/callback",(req,res)=>{
+//     const token = req.query.code
+//     if(token){
+//         oauth2Client.getToken(token,(err,tokens )=>{
+//           if(err) throw err
+//           oauth2Client.setCredentials(tokens)
+//           req.session.token = token
+//           res.redirect("/")
+//         })
       
 
-        const title = "demol"
-        const description = "demo description"
-        const tags = ["1","2","3"]
+//         const title = "demol"
+//         const description = "demo description"
+//         const tags = ["1","2","3"]
         
-        const youtube = google.youtube({
-          version:"v3",
-          auth:oauth2Client
-        })
-        youtube.videos.insert({
-          part: 'snippet,status',
-          requestBody: {
-            snippet: {
-              title,
-              description,
-              tags,
-              categoryId: categoryIds.ScienceTechnology,
-              defaultLanguage: 'en',
-              defaultAudioLanguage: 'en'
-            },
-            status: {
-              privacyStatus: "private"
-            },
+//         const youtube = google.youtube({
+//           version:"v3",
+//           auth:oauth2Client
+//         })
+//         youtube.videos.insert({
+//           part: 'snippet,status',
+//           requestBody: {
+//             snippet: {
+//               title,
+//               description,
+//               tags,
+//               categoryId: categoryIds.ScienceTechnology,
+//               defaultLanguage: 'en',
+//               defaultAudioLanguage: 'en'
+//             },
+//             status: {
+//               privacyStatus: "private"
+//             },
             
-          },
-          media: {
-            body: fs.createReadStream(videoFilePath),
-          },
-        }, function(err, response) {
-          if (err) {
-            console.log('The API returned an error: ' + err);
-            return;
-          }
-          console.log(response.data)
+//           },
+//           media: {
+//             body: fs.createReadStream(videoFilePath),
+//           },
+//         }, function(err, response) {
+//           if (err) {
+//             console.log('The API returned an error: ' + err);
+//             return;
+//           }
+//           console.log(response.data)
       
-          console.log('Video uploaded. Uploading the thumbnail now.')
-          youtube.thumbnails.set({
-            videoId: response.data.id,
-            media: {
-              body: fs.createReadStream(thumbFilePath)
-            },
-          }, function(err, response) {
-            if (err) {
-              console.log('The API returned an error: ' + err);
-              return;
-            }
-            console.log(response.data)
-          })
-        });
-    }
-})
+//           console.log('Video uploaded. Uploading the thumbnail now.')
+//           youtube.thumbnails.set({
+//             videoId: response.data.id,
+//             media: {
+//               body: fs.createReadStream(thumbFilePath)
+//             },
+//           }, function(err, response) {
+//             if (err) {
+//               console.log('The API returned an error: ' + err);
+//               return;
+//             }
+//             console.log(response.data)
+//           })
+//         });
+//     }
+// })
 
 // yt.uploadVideo("demo","no desc","multipleg tage")
 app.listen(5000,()=>{
-    console.log("running")
+    console.log("running on 5000")
 })
