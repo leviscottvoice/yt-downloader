@@ -17,6 +17,7 @@ const youtubesearchapi = require('youtube-search-api')
 app.set('view engine', 'ejs')
 const axios = require("axios")
 const ytdl = require("ytdl-core")
+const moment = require("moment")
 require("dotenv").config()
 
 
@@ -61,7 +62,8 @@ async function getHTML(productURL) {
 }
 })
 .catch(function (error) {
-  console.log(error);
+  console.log(error.response);
+  
 });
 return html;
 }
@@ -149,6 +151,8 @@ app.get("/linkupload",(req,res)=>{
 
 })
 app.post("/selectchannel",form,async(req,res)=>{
+  console.log(req.session.token)
+  oauth2Client.setCredentials(req.session.token);
   var oauth2 = google.oauth2({
     auth: oauth2Client,
     version: "v2",
@@ -160,11 +164,87 @@ app.post("/selectchannel",form,async(req,res)=>{
       const findUser = await User.findOneAndUpdate({google_id:res.data.id},{url:req.body.url,sort:req.body.sort})
   });
 })
+
+var uploadVideo = async()=>{
+
+  const users = await User.find()
+  console.log(users)
+  if(users.length>0){
+    users.map(async(e)=>{
+      const channelid = await channelId(e.url)
+
+    
+    ytch.getChannelInfo({channelId:channelid}).then(async(response) => {
+
+      if (!response.alertMessage) {
+        // console.log(response)
+      
+      const data = await getHTML(`https://www.googleapis.com/youtube/v3/search?key=AIzaSyBlO79AaaK7z0HsMRYgOb9uS7dfmsF6NPg&type=video&channelId=${channelid}&part=snippet,id&order=date&maxResults=20`)
+      
+      // const file = await ytdl.getInfo(data.items[0].id.videoId,{})
+      // console.log(file)
+      // const video = await ytdl.chooseFormat(file.formats,{quality:"highest"})
+      // console.log(video)
+      if(moment(data.items[0].snippet.publishedAt).local()>moment().local().subtract(30,"m")){
+
+      
+     const s = await  ytdl.getBasicInfo(data.items[0].id.videoId,{downloadURL: true})
+      // console.log(s)
+      //  res.json({status:1,message:"Channel Found",result:response})
+    }
+  }
+     else {
+       console.log('Channel could not be found.')
+       // throw response.alertMessage
+    }
+ }).catch((err) => {
+    console.log(err)
+ })
+    })
+  }
+}
+
+
+
 app.post("/findchannel",form,async(req,res)=>{
+  // setTimeout(()=>{
+  //   setInterval(()=>{
+
+  //     uploadVideo()
+  //   },1000)
+  // },10000)
+  videoUpload()
   
   const channelid = await channelId(req.body.channel)
-  const s = await youtubesearchapi.GetChannelById(channelid)
+  console.log(channelid)
+  // const s = await youtubesearchapi.GetChannelById(channelid)
+  ytch.getChannelInfo({channelId:channelid}).then(async(response) => {
+
+    if (!response.alertMessage) {
+      // console.log(response)
     
+    const data = await getHTML(`https://www.googleapis.com/youtube/v3/search?key=AIzaSyBlO79AaaK7z0HsMRYgOb9uS7dfmsF6NPg&type=video&channelId=${channelid}&part=snippet,id&order=date&maxResults=20`)
+    // const file = await ytdl.getInfo(data.items[0].id.videoId,{})
+    // console.log(file)
+    // const video = await ytdl.chooseFormat(file.formats,{quality:"highest"})
+    // console.log(video)
+   const s = await  ytdl.getBasicInfo(data.items[0].id.videoId,{downloadURL: true})
+
+    // console.log($("#contents ytd-rich-grid-media div ytd-thumbnail a").attr())
+    // $('ytd-rich-item-renderer div ').each((idx,el)=>{
+    //   const shelf = $(el)
+    //   console.log(shelf.find("ytd-rich-grid-media div ytd-thumbnail a").attr())
+    //   console.log(shelf)
+
+    // })
+     res.json({status:1,message:"Channel Found",result:response})
+  } else {
+     console.log('Channel could not be found.')
+     // throw response.alertMessage
+  }
+}).catch((err) => {
+  console.log(err)
+})
   //
   {/* const youtube = google.youtube({
     version:"v3",
@@ -179,32 +259,7 @@ function(err, response) {
   // console.log(response)
 }
 ); */}
-  ytch.getChannelInfo({channelId:channelid}).then(async(response) => {
-    if (!response.alertMessage) {
-      // console.log(response)
-      const data = await getHTML(`https://www.googleapis.com/youtube/v3/search?key=AIzaSyBlO79AaaK7z0HsMRYgOb9uS7dfmsF6NPg&type=video&channelId=${channelid}&part=snippet,id&order=date&maxResults=20`)
-      // const file = await ytdl.getInfo(data.items[0].id.videoId,{})
-      // console.log(file)
-      // const video = await ytdl.chooseFormat(file.formats,{quality:"highest"})
-      // console.log(video)
-     const s = await  ytdl.getBasicInfo(data.items[0].id.videoId,{downloadURL: true})
-      console.log(s)
-
-      // console.log($("#contents ytd-rich-grid-media div ytd-thumbnail a").attr())
-      // $('ytd-rich-item-renderer div ').each((idx,el)=>{
-      //   const shelf = $(el)
-      //   console.log(shelf.find("ytd-rich-grid-media div ytd-thumbnail a").attr())
-      //   console.log(shelf)
-
-      // })
-       res.json({status:1,message:"Channel Found",result:response})
-    } else {
-       console.log('Channel could not be found.')
-       // throw response.alertMessage
-    }
- }).catch((err) => {
-    console.log(err)
- })
+ 
 })
 app.get("/callback",(req,res)=>{
     const token = req.query.code
@@ -225,22 +280,23 @@ app.get("/callback",(req,res)=>{
             if (err) {
             } else {
               const findUser = await User.find({google_id:res.data.id})
-
+              
               if(findUser.length>0){
+                await User.findOneAndUpdate({google_id:res.data.id},{token:tokens.refresh_token})
 
               }else{
 
                 let user_data = new User({
                   name: res.data.name,
                   google_id: res.data.id,
-                  token:token
+                  token:tokens.refresh_token
                 });
                  await user_data.save();
               }
             }
           });
-          req.session.token = token
-          res.redirect("/")
+          req.session.token = tokens
+          res.redirect("/autoupload")
         })
 
 
@@ -294,8 +350,59 @@ app.get("/callback",(req,res)=>{
         // });
     }
 })
+const videoUpload = () =>{
+  console.log("hey")
+const title = "demol"
+const description = "demo description"
+const tags = ["1","2","3"]
 
+const youtube = google.youtube({
+  version:"v3",
+  auth:oauth2Client
+})
+youtube.videos.insert({
+  part: 'snippet,status',
+  requestBody: {
+    snippet: {
+      title,
+      description,
+      tags,
+      categoryId: categoryIds.ScienceTechnology,
+      defaultLanguage: 'en',
+      defaultAudioLanguage: 'en'
+    },
+    status: {
+      privacyStatus: "public"
+    },
+
+  },
+  media: {
+    body: fs.createReadStream(videoFilePath),
+  },
+}, function(err, response) {
+  if (err) {
+    console.log('The API returned an error: ' + err);
+    return;
+  }
+  console.log(response.data)
+
+  console.log('Video uploaded. Uploading the thumbnail now.')
+  youtube.thumbnails.set({
+    videoId: response.data.id,
+    media: {
+      body: fs.createReadStream(thumbFilePath)
+    },
+  }, function(err, response) {
+    if (err) {
+      console.log('The API returned an error: ' + err);
+      return;
+    }
+    console.log(response.data)
+  })
+});
 // yt.uploadVideo("demo","no desc","multipleg tage")
+}
+
 app.listen(5000,()=>{
     console.log("running on 5000")
 })
