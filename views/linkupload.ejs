@@ -20,19 +20,42 @@
                         
                         <!-- <small class="form-text text-muted text-left">Register email address</small> -->
                     </div>
-                    <div>
-                        <label for="time " class="mx-1">Start Time </label>
-                        <input type="time" id="time">
-                        <label for="interval" class="ml-4 mr-1">Interval </label>
-                        <input type="number" class="w-25" id="interval">
-
+                    <div style="display: flex; justify-content: left;">
+                        <label for="time " class="mr-1">Start Time </label>
+                        <input type="datetime-local" id="time" name="time">
                     </div>
+                    <div style="display: flex; justify-content: left; margin-top:10px;">
+                        <br>
+                        <label for="interval" class=" " style="margin-right:25px; ">Interval </label>
+                        <input type="number" class="w-25" name="interval" id="interval">
+                    </div>
+
             </div>
-                <button  href=""  name="submit" class="btn btn-success rounded-pill">Select</button>
+                <button  href=""  name="submit" class="btn btn-success rounded-pill">Upload</button>
         </div>
     </div>
     <script>
-       
+       const upload = document.getElementsByName("submit")[0]
+
+       upload.addEventListener("click",async()=>{
+        const url = document.getElementsByName("url")[0].value.split(/\r\n|\r|\n/) 
+        console.log( )
+        const formdata = new FormData()
+        formdata.append("urls",url.toString())
+        formdata.append("time",document.getElementsByName("time")[0].value)
+        formdata.append("interval",document.getElementsByName("interval")[0].value)
+        const fetchdata = await fetch("/uploadurl",{
+            method:"post",
+            body:formdata
+        })
+        const resp = await fetchdata.json()
+        if(resp.status == 1){
+            alert("Successfully Addedd")
+        }else{
+            alert("Server Error")
+
+        }
+       })
     </script>
 </body>
 </html>

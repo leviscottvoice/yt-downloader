@@ -19,6 +19,7 @@ const axios = require("axios")
 const ytdl = require("ytdl-core")
 const moment = require("moment")
 require("dotenv").config()
+const Long = require("long")
 
 
 
@@ -54,6 +55,8 @@ const categoryIds = {
 
 app.use('/static', express.static(path.join(__dirname, 'public')))
 app.use('/assets', express.static(path.join(__dirname, 'public/assets')))
+
+const str = "https://www.youtube.com/watch?v=b7DrwqoHAGA"
 
 async function getHTML(productURL) {
   const { data: html } = await  axios.get(productURL, {
@@ -150,6 +153,34 @@ app.get("/linkupload",(req,res)=>{
   res.render("linkupload")
 
 })
+
+app.post("/uploadurl",form,async(req,res)=>{
+  const urls =  req.body.urls.split(",")
+  const startTime =  new Long( new Date(moment(req.body.time)).getTime())
+  var timeIsBeing936 = new Date(new Date(moment(req.body.time))).getTime()
+  , currentTime = new Date().getTime()
+  , subtractMilliSecondsValue = timeIsBeing936 - currentTime;
+  const interval = new Long( parseInt(req.body.interval) * 60000)
+  console.log(interval.toString())
+  setTimeout(()=>{
+
+    for (let i = 0; i < urls.length-1; i++) {
+      setTimeout( ()=> downloadAndUpload(urls[1],interval.toString()), interval.toString());
+    }
+    // urls.map(async(e)=>{
+      
+      
+      
+    // })
+  },subtractMilliSecondsValue)
+})
+function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
+const downloadAndUpload = async(e,interval) =>{
+    // await timer(interval)
+  const videoId = e.match(/^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/)[1]
+  const info =  await ytdl.getBasicInfo(videoId,{downloadURL: true}) 
+  console.log(info)
+}
 app.post("/selectchannel",form,async(req,res)=>{
   console.log(req.session.token)
   oauth2Client.setCredentials(req.session.token);

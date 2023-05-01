@@ -23,6 +23,7 @@
     "forever": "^4.0.3",
     "google-auth-library": "^8.7.0",
     "googleapis": "^118.0.0",
+    "long": "^5.2.3",
     "moment": "^2.29.4",
     "mongoose": "^7.0.4",
     "multer": "^1.4.5-lts.1",
