@@ -173,6 +173,7 @@ app.post("/uploadurl",form,async(req,res)=>{
       
     // })
   },subtractMilliSecondsValue)
+  res.json({status:1})
 })
 function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
 const downloadAndUpload = async(e,interval) =>{
