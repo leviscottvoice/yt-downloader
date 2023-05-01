@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
         type:String,
         require:true
     },
-    email:{
+    google_id:{
         type:String,
         require:true
     },
@@ -13,4 +13,12 @@ const userSchema = new mongoose.Schema({
         type:String,
         require:true
     },
+    url:{
+        type:String,
+        require:true
+    },
+    sort:{
+        type:Number,
+        require:true
+    }
 })

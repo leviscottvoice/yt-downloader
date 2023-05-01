@@ -16,21 +16,33 @@
                 <span>Log in for the existing user</span>
                
                     <div class="form-group">
-                        <input type="email" class="form-control mt-3 py-1" placeholder="Enter Channer Url..." value="this" name="email">
+                        <input type="email" class="form-control mt-3 py-1" placeholder="Enter Channer Url..." value="" name="email">
                         <!-- <small class="form-text text-muted text-left">Register email address</small> -->
                     </div>
                     <div class="channel">
 
                     </div>
             </div>
-                <a type="submit" href=""  class="btn btn-success rounded-pill">Select</a>
+                <button  href=""  name="submit" class="btn btn-success rounded-pill">Select</button>
         </div>
     </div>
     <script>
         const email = document.getElementsByName("email")
+        const button = document.getElementsByName("submit")
+        button[0].addEventListener("click",async()=>{
+            const formdata = new FormData()
+            formdata.append("url",email[0].value)
+            formdata.append("sort",document.getElementsByName("sort")[0].checked == true ? 1 : 2)
+            console.log( );
+            const fetchData = await fetch("/selectchannel",{
+                method:"post",
+                body:formdata
+            })
+        })
         email[0].addEventListener("blur",async()=>{
             const formdata = new FormData()
             formdata.append("channel",email[0].value)
+                
                 const fetchdata = await fetch("/findchannel",{
                     method:"post",
                     body:formdata
@@ -44,6 +56,23 @@
                         const div2 = document.createElement("div")
                         const title = document.createElement("h4")
                         const subscriber = document.createElement("h5")
+                        const viewsLable  = document.createElement("label")
+                        const DateLable  = document.createElement("label")
+                        const viewCheckbox = document.createElement("input")
+                        const dateCheckbox = document.createElement("input")
+                        dateCheckbox.type = 'radio'
+                        dateCheckbox.id = 'date'
+                        dateCheckbox.name = 'sort'
+                        dateCheckbox.value = '2'
+                        viewCheckbox.type = 'radio'
+                        viewCheckbox.id = 'view'
+                        viewCheckbox.name = 'sort'
+                        viewCheckbox.value = '1'
+                        DateLable.htmlFor = "date"
+                        viewsLable.htmlFor = "view"
+                        viewsLable.innerText = "Views"
+                        DateLable.style = "margin-left:10px"
+                        DateLable.innerText = "Date"
 
                         title.innerText = resp.result.author
 
@@ -51,6 +80,10 @@
                         subscriber.style = "margin-left:10px"
                         div2.appendChild(title)
                         div2.appendChild(subscriber)
+                        div2.appendChild(viewsLable)
+                        div2.appendChild(viewCheckbox)
+                        div2.appendChild(DateLable)
+                        div2.appendChild(dateCheckbox)
                         title.style = "margin-left:10px"
                         
                         div.style = "display:flex; justify-content:center;align-items:center"
