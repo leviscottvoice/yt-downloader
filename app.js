@@ -19,7 +19,11 @@ const axios = require("axios")
 const ytdl = require("ytdl-core")
 const moment = require("moment")
 require("dotenv").config()
+const cp = require('child_process');
+const ffmpeg = require('ffmpeg-static');
 const Long = require("long")
+const {v4:uuidv4} = require('uuid');
+const download = require("image-downloader")
 
 
 
@@ -154,6 +158,14 @@ app.get("/linkupload",(req,res)=>{
 
 })
 
+function waitforme(millisec) {
+  return new Promise(resolve => {
+      setTimeout(() => { resolve('') }, millisec);
+  })
+}
+
+
+
 app.post("/uploadurl",form,async(req,res)=>{
   const urls =  req.body.urls.split(",")
   const startTime =  new Long( new Date(moment(req.body.time)).getTime())
@@ -162,26 +174,110 @@ app.post("/uploadurl",form,async(req,res)=>{
   , subtractMilliSecondsValue = timeIsBeing936 - currentTime;
   const interval = new Long( parseInt(req.body.interval) * 60000)
   console.log(interval.toString())
-  setTimeout(()=>{
-
-    for (let i = 0; i < urls.length-1; i++) {
-      setTimeout( ()=> downloadAndUpload(urls[1],interval.toString()), interval.toString());
-    }
-    // urls.map(async(e)=>{
-      
-      
-      
-    // })
+  setTimeout(async()=>{
+    for (let i = 0; i < urls.length; ++i) {
+      await waitforme(interval);
+      downloadAndUpload(urls[i])
+  }
   },subtractMilliSecondsValue)
   res.json({status:1})
 })
-function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
-const downloadAndUpload = async(e,interval) =>{
+const downloadAndUpload = async(e) =>{
     // await timer(interval)
   const videoId = e.match(/^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/)[1]
-  const info =  await ytdl.getBasicInfo(videoId,{downloadURL: true}) 
-  console.log(info)
+
+  const randomname = uuidv4() + ".mp4"
+  const randothumb = __dirname +"/" +  uuidv4() + ".jpg"
+   const video =   ytdl(videoId,{quality:'18'}).pipe(fs.createWriteStream(randomname))
+  let info = await ytdl.getInfo("https://www.youtube.com/watch?v="+videoId);
+
+  download.image({
+    url: info.videoDetails.thumbnails.find((e)=>{return e.url.includes("maxresdefault.webp")}).url,
+    dest:randothumb
+  }).then((e)=>{
+    console.log(e)
+  }).catch((err)=>{
+    console.log(err)
+  })
+  const title = info.videoDetails.title
+  const description = info.videoDetails.description 
+  const keywords = info.videoDetails.keywords
+  const mfk = info.videoDetails.age_restricted
+  const category = {
+     "Film & Animation":1	 ,
+     "Autos & Vehicles":2	 ,
+     "Music":10,
+     "Pets & Animals":15,
+     "Sports":17,
+     "Short Movies":18,
+     "Travel & Events":19,
+     "Gaming":20,
+     "Videoblogging":21,
+     "People & Blogs":22,
+     "Comedy":23,
+     "Entertainment":24,
+     "News & Politics":25,
+     "Howto & Style":26,
+     "Education":27,
+     "Science & Technology":28,
+     "Nonprofits & Activism":29,
+     "Movies":30,
+     "Anime/Animation":31,
+     "Action/Adventure":32,
+     "Classics":33,
+     "Comedy":34,
+     "Documentary":35,
+     "Drama":36,
+     "Family":37,
+     "Foreign":38,
+     "Horror":39,
+     "Sci-Fi/Fantasy":40,
+     "Thriller":41,
+     "Shorts":42,
+     "Shows":43,
+     "Trailers":44,
+  }
+    const cat_id = category[info.videoDetails.category]
+   videoUpload({title,description,tags:keywords,thumbFilePath:__dirname+"/"+randothumb,categoryId:cat_id,videoFilePath:__dirname +"/"+ randomname})
+
+  
+  // const audio =   ytdl('https://www.youtube.com/watch?v=iZ6MdFTSl5c',{quality:"highestaudio"})
+  // .pipe(fs.createWriteStream('audio.mp3'))
+
+
+//   const ffmpegProcess = cp.spawn(ffmpeg, [
+//     '-i', `pipe:3`,
+//     '-i', `pipe:4`,
+//     '-map','0:v',
+//     '-map','1:a',
+//     '-c:v', 'copy',
+//     '-c:a', 'libmp3lame',
+//     '-crf','27',
+//     '-preset','veryfast',
+//     '-movflags','frag_keyframe+empty_moov',
+//     '-f','mp4',
+//     '-loglevel','error',
+// ], {
+//     windowsHide: true,
+//     stdio: [
+//       'pipe', 'pipe', 'pipe', 'pipe', 'pipe',
+//       ],
+// });
+
+// audio.pipe(ffmpegProcess.stdio[3]);
+// video.pipe(ffmpegProcess.stdio[3]);
+// console.log(ffmpegProcess.stdio[1])
+// ffmpegProcess.stdio[1].pipe(fs.createWriteStream("video2.mp4"));
+// cp.exec("ffmpeg -i video.mp4 -i audio.wav -c:v copy -c:a aac output.mp4",(error, stdout, stderr) => {
+//   if (error) {
+//     console.error(`exec error: ${error}`);
+//     return;
+//   }
+//   console.log(`stdout: ${stdout}`);
+//   console.error(`stderr: ${stderr}`);
+// })
 }
+// downloadAndUpload("https://www.youtube.com/watch?v=iZ6MdFTSl5c")
 app.post("/selectchannel",form,async(req,res)=>{
   console.log(req.session.token)
   oauth2Client.setCredentials(req.session.token);
@@ -382,11 +478,8 @@ app.get("/callback",(req,res)=>{
         // });
     }
 })
-const videoUpload = () =>{
+const videoUpload = ({title,description,tags,categoryId,videoFilePath,thumbFilePath}) =>{
   console.log("hey")
-const title = "demol"
-const description = "demo description"
-const tags = ["1","2","3"]
 
 const youtube = google.youtube({
   version:"v3",
@@ -399,7 +492,7 @@ youtube.videos.insert({
       title,
       description,
       tags,
-      categoryId: categoryIds.ScienceTechnology,
+      categoryId: categoryId,
       defaultLanguage: 'en',
       defaultAudioLanguage: 'en'
     },
