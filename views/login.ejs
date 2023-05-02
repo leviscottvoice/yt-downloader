@@ -1,0 +1,20 @@
+<%- include('header') -%>
+
+
+<div class="text-center center-div" id="login">
+    <div class="container w-25 border py-5">
+        <div class="title pb-5">
+            <h2 class="font-weight-bold">Login Here</h2>
+            <span>Log in for the existing user</span>
+            <% if(locals.logout){ %>
+                <div class="alter alert-success text-center">
+                    <%= logout %>
+                </div>
+            <% } %>
+        </div>
+            <a type="submit" href="<%=url%>"  class="btn btn-success rounded-pill">Login</a>
+    </div>
+</div>
+
+
+<%- include('footer') -%>
