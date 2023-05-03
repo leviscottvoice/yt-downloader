@@ -1,0 +1,107 @@
+<%- include('header') -%>
+<%- include('home') -%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="text-center center-div" id="login">
+        <div class="container w-25 border py-5">
+            <div class="title pb-5">
+                <h2 class="font-weight-bold">Upload Popular Video</h2>
+               
+                    <div class="form-group">
+                        <input type="text"  class="form-control mt-3 py-1" placeholder="Enter Video Url..."    name="url">
+                        </input>
+                        
+                        <!-- <small class="form-text text-muted text-left">Register email address</small> -->
+                    </div>
+                    <div class="channel">
+
+                    </div>
+                    <div style="display: flex; justify-content: left;">
+                        <label for="time " class="mr-1">Start Time </label>
+                        <input type="datetime-local" id="time" name="time">
+                    </div>
+                    <div style="display: flex; justify-content: left; margin-top:10px;">
+                        <br>
+                        <label for="interval" class=" " style="margin-right:25px; ">Interval </label>
+                        <input type="number" class="w-25" name="interval" id="interval">
+                    </div>
+
+            </div>
+                <button  href=""  name="submit" class="btn btn-success rounded-pill">Upload</button>
+        </div>
+    </div>
+    <script>
+       const upload = document.getElementsByName("submit")[0]
+
+       upload.addEventListener("click",async()=>{
+        const url = document.getElementsByName("url")[0].value.split(/\r\n|\r|\n/) 
+        console.log( )
+        const formdata = new FormData()
+        formdata.append("urls",url.toString())
+        formdata.append("time",document.getElementsByName("time")[0].value)
+        formdata.append("interval",document.getElementsByName("interval")[0].value)
+        const fetchdata = await fetch("/uploadurl",{
+            method:"post",
+            body:formdata 
+        })
+        const resp = await fetchdata.json()
+        if(resp.status == 1){
+            alert("Successfully Addedd")
+        }else{
+            alert("Server Error")
+
+        }
+       })
+       const email = document.getElementsByName("url")
+
+       email[0].addEventListener("blur",async()=>{
+            const formdata = new FormData()
+            formdata.append("channel",email[0].value)
+                
+                const fetchdata = await fetch("/findchannel",{
+                    method:"post",
+                    body:formdata
+                })
+                const resp  = await fetchdata.json()
+                console.log(resp)
+                if(resp.status == 1){
+                    if(!document.querySelector("img")){
+                        
+                        const div = document.createElement("div")
+                        const div2 = document.createElement("div")
+                        const title = document.createElement("h4")
+                        const subscriber = document.createElement("h5")
+                       
+
+                        title.innerText = resp.result.author
+
+                        subscriber.innerText = resp.result.subscriberText
+                        subscriber.style = "margin-left:10px"
+                        div2.appendChild(title)
+                        div2.appendChild(subscriber)
+                        title.style = "margin-left:10px"
+                        
+                        div.style = "display:flex; justify-content:center;align-items:center"
+                        
+                        const channel = document.getElementsByClassName("channel")
+                        const image = document.createElement("img")
+                        image.src = resp.result.authorThumbnails[2].url
+                        
+                        image.width = 100
+                        div.appendChild(image)
+                        div.appendChild(div2)
+                        channel[0].appendChild(div)
+                    }
+                }
+
+        })
+    </script>
+</body>
+</html>

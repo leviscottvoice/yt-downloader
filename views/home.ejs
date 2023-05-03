@@ -10,17 +10,23 @@
 <body>
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid">
-          <a class="navbar-brand text-dark font-weight-bold" href="/">Youtube</a>
+
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon">s</span>
           </button>
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ">
               <li class="nav-item">
-                <a class="nav-link active text-dark" aria-current="page" href="/autoupload">Auto Upload</a>
+                <a class=" nav-link text-dark font-weight-bold" href="/uploadpop" >Upload Popular video</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link text-dark" href="/linkupload">Upload with Link</a>
+                <a class="nav-link  text-dark font-weight-bold" aria-current="page" href="/autoupload">Upload New Video</a>
+              </li>
+              <li class="nav-item">
+                <a class=" text-dark nav-link font-weight-bold" href="/linkupload">Upload with Link</a>
+              </li>
+              <li class="" name="opt" style="margin-left: 20px; margin-top: 5px;">
+
               </li>
               
             </ul>
@@ -29,4 +35,26 @@
         </div>
       </nav>
 </body>
+<script>
+  window.onload = async()=>{
+    const fetchdata = await fetch('/getusers',{
+      method:"get"
+    })
+    const resp = await fetchdata.json()
+    if(resp.status==1){
+      const select = document.createElement("select")
+      const li = document.getElementsByName("opt")
+      
+      resp.data.map((e)=>{
+          const opt = document.createElement("option")
+          opt.text = e.name
+          opt.value = e.google_id
+          select.add(opt)
+      })
+      select.selectedIndex = resp.data.findIndex(e=>e.google_id == resp.data.current)
+        li[0].appendChild(select)
+
+    }
+  }
+</script>
 </html>

@@ -20,12 +20,24 @@ const ytdl = require("ytdl-core")
 const moment = require("moment")
 require("dotenv").config()
 const cp = require('child_process');
-const ffmpeg = require('ffmpeg-static');
+const ffmpeg = require("fluent-ffmpeg")
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+ffmpeg.setFfmpegPath(ffmpegPath)
 const Long = require("long")
 const {v4:uuidv4} = require('uuid');
 const download = require("image-downloader")
 
 
+ytch.getChannelVideosMore({channelId:"UCRrvsqGO9eOGJmAwT_Ff0kA",sortBy:"newest",channelIdType:0}).then((response) => {
+  if (!response.alertMessage) {
+     console.log(response)
+  } else {
+     console.log('Channel could not be found.')
+     // throw response.alertMessage
+  }
+}).catch((err) => {
+  console.log(err)
+})
 
 app.use(cookieparser())
 app.use(session({
@@ -44,6 +56,7 @@ mongoose.connect(process.env.MONGO_URL,{
 })
 const User = require("./model/users");
 const { cloudfunctions } = require("googleapis/build/src/apis/cloudfunctions");
+const { request } = require("http");
 const videoFilePath = "./" + "vid.mp4"
 const thumbFilePath = "./" + "thumb.jpg"
 const SCOPES = ['https://www.googleapis.com/auth/youtube.upload','https://www.googleapis.com/auth/userinfo.profile'];
@@ -99,56 +112,6 @@ app.get("/get",(req,res)=>{
 
       }else{
 
-        // const youtube = google.youtube({
-        //   version:"v3",
-        //   auth:oauth2Client
-        // })
-        // const title = "demol"
-        // const description = "demo description"
-        // const tags = ["1","2","3"]
-
-        // youtube.videos.insert({
-        //   part: 'snippet,status',
-        //   requestBody: {
-        //     snippet: {
-        //       title,
-        //       description,
-        //       tags,
-        //       categoryId: categoryIds.ScienceTechnology,
-        //       defaultLanguage: 'en',
-        //       defaultAudioLanguage: 'en'
-        //     },
-        //     status: {
-        //       privacyStatus: "private",
-        //       selfDeclaredMadeForKids:true
-        //     },
-
-        //   },
-        //   media: {
-        //     body: fs.createReadStream(videoFilePath),
-        //   },
-        // }, function(err, response) {
-        //   if (err) {
-        //     console.log('The API returned an error: ' + err);
-        //     return;
-        //   }
-        //   console.log(response.data)
-
-        //   console.log('Video uploaded. Uploading the thumbnail now.')
-        //   youtube.thumbnails.set({
-        //     videoId: response.data.id,
-        //     media: {
-        //       body: fs.createReadStream(thumbFilePath)
-        //     },
-        //   }, function(err, response) {
-        //     if (err) {
-        //       console.log('The API returned an error: ' + err);
-        //       return;
-        //     }
-        //     console.log(response.data)
-        //   })
-        // });
-
       }
 })
 app.get("/autoupload",(req,res)=>{
@@ -166,7 +129,9 @@ function waitforme(millisec) {
 }
 
 
-
+app.get("/uploadpop",(req,res)=>{
+  res.render("uploadpop")
+})
 app.post("/uploadurl",form,async(req,res)=>{
   const urls =  req.body.urls.split(",")
   const startTime =  new Long( new Date(moment(req.body.time)).getTime())
@@ -188,10 +153,29 @@ const downloadAndUpload = async(e) =>{
   const videoId = e.match(/^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/)[1]
 
   const randomname = uuidv4() + ".mp4"
+  const randvid = uuidv4() + ".mp4"
+  const randAudio = uuidv4() + ".mp3"
   const randothumb = __dirname +"/" +  uuidv4() + ".jpg"
-   const video =   ytdl(videoId,{quality:'18'}).pipe(fs.createWriteStream(randomname))
+   const video =   ytdl(videoId,{quality:'highestvideo'}).pipe(fs.createWriteStream(randomname))
+   const audio =   ytdl(videoId,{quality:"highestaudio"}).pipe(fs.createWriteStream(randAudio))
+
+  
+function merge(video, audio) {
+  ffmpeg()
+      .addInput(video)
+      .addInput(audio)
+      .addOptions(['-map 0:v', '-map 1:a', '-c:v copy'])
+      .format('mp4')
+      .on('error', error => console.log(error))
+      .on('end', res => {fs.unlink(__dirname + "\/" + randomname,(err)=>{console.log(err)});fs.unlink(__dirname + "\/" + randAudio,(err)=>{console.log(err)})})
+      .saveToFile(randvid)
+}
+await waitforme(10000)
+merge( `${__dirname}` +  `\/${randomname}`,__dirname + "\/" + randAudio)
+
   let info = await ytdl.getInfo("https://www.youtube.com/watch?v="+videoId);
-  console.log(info.videoDetails)
+  console.log(info)
+  // console.log(info.videoDetails)
   download.image({
     url: info.videoDetails.thumbnails.find((e)=>{return e.url.includes("maxresdefault.webp")})?.url ? info.videoDetails.thumbnails.find((e)=>{return e.url.includes("maxresdefault.webp")})?.url : info.videoDetails.thumbnails[0].url,
     dest:randothumb
@@ -239,50 +223,15 @@ const downloadAndUpload = async(e) =>{
      "Trailers":44,
   }
     const cat_id = category[info.videoDetails.category]
-   videoUpload({title,description,tags:keywords,thumbFilePath:__dirname+"/"+randothumb,categoryId:cat_id,videoFilePath:__dirname +"/"+ randomname})
-
-  
-  // const audio =   ytdl('https://www.youtube.com/watch?v=iZ6MdFTSl5c',{quality:"highestaudio"})
-  // .pipe(fs.createWriteStream('audio.mp3'))
-
-
-//   const ffmpegProcess = cp.spawn(ffmpeg, [
-//     '-i', `pipe:3`,
-//     '-i', `pipe:4`,
-//     '-map','0:v',
-//     '-map','1:a',
-//     '-c:v', 'copy',
-//     '-c:a', 'libmp3lame',
-//     '-crf','27',
-//     '-preset','veryfast',
-//     '-movflags','frag_keyframe+empty_moov',
-//     '-f','mp4',
-//     '-loglevel','error',
-// ], {
-//     windowsHide: true,
-//     stdio: [
-//       'pipe', 'pipe', 'pipe', 'pipe', 'pipe',
-//       ],
-// });
-
-// audio.pipe(ffmpegProcess.stdio[3]);
-// video.pipe(ffmpegProcess.stdio[3]);
-// console.log(ffmpegProcess.stdio[1])
-// ffmpegProcess.stdio[1].pipe(fs.createWriteStream("video2.mp4"));
-// cp.exec("ffmpeg -i video.mp4 -i audio.wav -c:v copy -c:a aac output.mp4",(error, stdout, stderr) => {
-//   if (error) {
-//     console.error(`exec error: ${error}`);
-//     return;
-//   }
-//   console.log(`stdout: ${stdout}`);
-//   console.error(`stderr: ${stderr}`);
-// })
+  //  videoUpload({title,description,tags:keywords,thumbFilePath:__dirname+"/"+randothumb,categoryId:cat_id,videoFilePath:__dirname +"/"+ randomname})
 }
 // downloadAndUpload("https://www.youtube.com/watch?v=iZ6MdFTSl5c")
+// downloadAndUpload("https://www.youtube.com/watch?v=QCTtc36u-Kk")
 app.post("/selectchannel",form,async(req,res)=>{
   console.log(req.session.token)
   oauth2Client.setCredentials(req.session.token);
-  var oauth2 = google.oauth2({
+  // oauth2Client.get
+    var oauth2 = google.oauth2({
     auth: oauth2Client,
     version: "v2",
   });
@@ -292,6 +241,27 @@ app.post("/selectchannel",form,async(req,res)=>{
     } 
       const findUser = await User.findOneAndUpdate({google_id:res.data.id},{url:req.body.url,sort:req.body.sort})
   });
+})
+
+app.get("/getusers",async(req,res)=>{
+  console.log("hey")
+  if(req.session.token){
+    var oauth2 = google.oauth2({
+      auth: oauth2Client,
+      version: "v2",
+    });
+    oauth2.userinfo.get(async (err, data) => {
+      if (err) {
+        console.log(err);
+      } 
+        
+        const users = await User.find()
+        if(users.length>0){
+          console.log(users)
+          res.json({status:1,data:users,current:data.data.id})
+        }
+      });
+  }
 })
 
 var uploadVideo = async()=>{
