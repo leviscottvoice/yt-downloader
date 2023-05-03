@@ -42,7 +42,8 @@ mongoose.connect(process.env.MONGO_URL,{
 }).catch((err)=>{
   console.log(err);
 })
-const User = require("./model/users")
+const User = require("./model/users");
+const { cloudfunctions } = require("googleapis/build/src/apis/cloudfunctions");
 const videoFilePath = "./" + "vid.mp4"
 const thumbFilePath = "./" + "thumb.jpg"
 const SCOPES = ['https://www.googleapis.com/auth/youtube.upload','https://www.googleapis.com/auth/userinfo.profile'];
@@ -190,9 +191,9 @@ const downloadAndUpload = async(e) =>{
   const randothumb = __dirname +"/" +  uuidv4() + ".jpg"
    const video =   ytdl(videoId,{quality:'18'}).pipe(fs.createWriteStream(randomname))
   let info = await ytdl.getInfo("https://www.youtube.com/watch?v="+videoId);
-
+  console.log(info.videoDetails)
   download.image({
-    url: info.videoDetails.thumbnails.find((e)=>{return e.url.includes("maxresdefault.webp")}).url,
+    url: info.videoDetails.thumbnails.find((e)=>{return e.url.includes("maxresdefault.webp")})?.url ? info.videoDetails.thumbnails.find((e)=>{return e.url.includes("maxresdefault.webp")})?.url : info.videoDetails.thumbnails[0].url,
     dest:randothumb
   }).then((e)=>{
     console.log(e)
@@ -511,7 +512,9 @@ youtube.videos.insert({
   }
   console.log(response.data)
 
-  fs.unlink(__dirname + "/" + videoFilePath)
+  fs.unlink(videoFilePath,(err)=>{
+    if(err) console.log(err)
+  })
   
   console.log('Video uploaded. Uploading the thumbnail now.')
   youtube.thumbnails.set({
@@ -525,7 +528,9 @@ youtube.videos.insert({
       return;
     }
     console.log(response.data)
-    fs.unlink(__dirname + "/" + thumbFilePath)
+    fs.unlink(thumbFilePath,(err)=>{
+      if(err) console.log(err)
+    })
   })
 });
 // yt.uploadVideo("demo","no desc","multipleg tage")
