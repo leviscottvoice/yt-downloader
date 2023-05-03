@@ -341,7 +341,7 @@ app.post("/findchannel",form,async(req,res)=>{
   //     uploadVideo()
   //   },1000)
   // },10000)
-  videoUpload()
+  // videoUpload()
   
   const channelid = await channelId(req.body.channel)
   console.log(channelid)
@@ -511,6 +511,8 @@ youtube.videos.insert({
   }
   console.log(response.data)
 
+  fs.unlink(__dirname + "/" + videoFilePath)
+  
   console.log('Video uploaded. Uploading the thumbnail now.')
   youtube.thumbnails.set({
     videoId: response.data.id,
@@ -523,6 +525,7 @@ youtube.videos.insert({
       return;
     }
     console.log(response.data)
+    fs.unlink(__dirname + "/" + thumbFilePath)
   })
 });
 // yt.uploadVideo("demo","no desc","multipleg tage")
