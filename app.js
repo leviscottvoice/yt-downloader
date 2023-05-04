@@ -162,7 +162,6 @@ await waitforme(10000)
 merge( `${__dirname}` +  `\/${randomname}`,__dirname + "\/" + randAudio)
 
   let info = await ytdl.getInfo("https://www.youtube.com/watch?v="+videoId);
-  console.log(info)
   // console.log(info.videoDetails)
   download.image({
     url: info.videoDetails.thumbnails.find((e)=>{return e.url.includes("maxresdefault.webp")})?.url ? info.videoDetails.thumbnails.find((e)=>{return e.url.includes("maxresdefault.webp")})?.url : info.videoDetails.thumbnails[0].url,
@@ -210,8 +209,14 @@ merge( `${__dirname}` +  `\/${randomname}`,__dirname + "\/" + randAudio)
      "Shows":43,
      "Trailers":44,
   }
+  fs.unlink(__dirname + "/"+  randomname,(err)=>{
+    console.log(err)
+  })
+  fs.unlink(__dirname +"/" +randAudio,(err)=>{
+    console.log(err)
+  })
     const cat_id = category[info.videoDetails.category]
-  //  videoUpload({title,description,tags:keywords,thumbFilePath:__dirname+"/"+randothumb,categoryId:cat_id,videoFilePath:__dirname +"/"+ randomname})
+    videoUpload({title,description,tags:keywords,thumbFilePath:__dirname+"/"+randothumb,categoryId:cat_id,videoFilePath:__dirname +"/"+ randvid})
 }
 // downloadAndUpload("https://www.youtube.com/watch?v=iZ6MdFTSl5c")
 // downloadAndUpload("https://www.youtube.com/watch?v=QCTtc36u-Kk")
@@ -232,7 +237,6 @@ app.post("/selectchannel",form,async(req,res)=>{
 })
 
 app.get("/getusers",async(req,res)=>{
-  console.log("hey")
   if(req.session.token){
     var oauth2 = google.oauth2({
       auth: oauth2Client,
@@ -306,7 +310,7 @@ app.post("/findchannel",form,async(req,res)=>{
   console.log(channelid)
   // const s = await youtubesearchapi.GetChannelById(channelid)
   ytch.getChannelInfo({channelId:channelid}).then(async(response) => {
-
+      console.log(response)
     if (!response.alertMessage) {
       // console.log(response)
 
@@ -367,6 +371,10 @@ app.post("/switch",form,async(req,res)=>{
       
   }
 })
+app.get("/queues",(req,res)=>{
+  return res.render("history")
+})
+
 app.get("/callback",(req,res)=>{
     const token = req.query.code
     // const infor = axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${token}`)
