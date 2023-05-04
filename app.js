@@ -27,18 +27,6 @@ const Long = require("long")
 const {v4:uuidv4} = require('uuid');
 const download = require("image-downloader")
 
-
-ytch.getChannelVideosMore({channelId:"UCRrvsqGO9eOGJmAwT_Ff0kA",sortBy:"newest",channelIdType:0}).then((response) => {
-  if (!response.alertMessage) {
-     console.log(response)
-  } else {
-     console.log('Channel could not be found.')
-     // throw response.alertMessage
-  }
-}).catch((err) => {
-  console.log(err)
-})
-
 app.use(cookieparser())
 app.use(session({
   secret:"e6VgtiqH1DwSNFnHWOJcQEp4b7FwGEZB",
@@ -84,7 +72,7 @@ async function getHTML(productURL) {
 })
 .catch(function (error) {
   console.log(error.response);
-  
+
 });
 return html;
 }
@@ -99,21 +87,21 @@ app.get("/",async(req,res)=>{
     res.render("home",)
 
   }
-  
+
 })
-app.get("/get",(req,res)=>{
+// app.get("/get",(req,res)=>{
 
-      if(!req?.session?.token){
+//       if(!req?.session?.token){
 
-        const authUrl = oauth2Client.generateAuthUrl({
-          access_type: 'offline',
-          scope: SCOPES
-        });
+//         const authUrl = oauth2Client.generateAuthUrl({
+//           access_type: 'offline',
+//           scope: SCOPES
+//         });
 
-      }else{
+//       }else{
 
-      }
-})
+//       }
+// })
 app.get("/autoupload",(req,res)=>{
   res.render("autoupload")
 })
@@ -159,7 +147,7 @@ const downloadAndUpload = async(e) =>{
    const video =   ytdl(videoId,{quality:'highestvideo'}).pipe(fs.createWriteStream(randomname))
    const audio =   ytdl(videoId,{quality:"highestaudio"}).pipe(fs.createWriteStream(randAudio))
 
-  
+
 function merge(video, audio) {
   ffmpeg()
       .addInput(video)
@@ -185,7 +173,7 @@ merge( `${__dirname}` +  `\/${randomname}`,__dirname + "\/" + randAudio)
     console.log(err)
   })
   const title = info.videoDetails.title
-  const description = info.videoDetails.description 
+  const description = info.videoDetails.description
   const keywords = info.videoDetails.keywords
   const mfk = info.videoDetails.age_restricted
   const category = {
@@ -238,7 +226,7 @@ app.post("/selectchannel",form,async(req,res)=>{
   oauth2.userinfo.get(async (err, res) => {
     if (err) {
       console.log(err);
-    } 
+    }
       const findUser = await User.findOneAndUpdate({google_id:res.data.id},{url:req.body.url,sort:req.body.sort})
   });
 })
@@ -253,8 +241,8 @@ app.get("/getusers",async(req,res)=>{
     oauth2.userinfo.get(async (err, data) => {
       if (err) {
         console.log(err);
-      } 
-        
+      }
+
         const users = await User.find()
         if(users.length>0){
           console.log(users)
@@ -272,21 +260,21 @@ var uploadVideo = async()=>{
     users.map(async(e)=>{
       const channelid = await channelId(e.url)
 
-    
+
     ytch.getChannelInfo({channelId:channelid}).then(async(response) => {
 
       if (!response.alertMessage) {
         // console.log(response)
-      
+
       const data = await getHTML(`https://www.googleapis.com/youtube/v3/search?key=AIzaSyBlO79AaaK7z0HsMRYgOb9uS7dfmsF6NPg&type=video&channelId=${channelid}&part=snippet,id&order=date&maxResults=20`)
-      
+
       // const file = await ytdl.getInfo(data.items[0].id.videoId,{})
       // console.log(file)
       // const video = await ytdl.chooseFormat(file.formats,{quality:"highest"})
       // console.log(video)
       if(moment(data.items[0].snippet.publishedAt).local()>moment().local().subtract(30,"m")){
 
-      
+
      const s = await  ytdl.getBasicInfo(data.items[0].id.videoId,{downloadURL: true})
       // console.log(s)
       //  res.json({status:1,message:"Channel Found",result:response})
@@ -313,7 +301,7 @@ app.post("/findchannel",form,async(req,res)=>{
   //   },1000)
   // },10000)
   // videoUpload()
-  
+
   const channelid = await channelId(req.body.channel)
   console.log(channelid)
   // const s = await youtubesearchapi.GetChannelById(channelid)
@@ -321,7 +309,7 @@ app.post("/findchannel",form,async(req,res)=>{
 
     if (!response.alertMessage) {
       // console.log(response)
-    
+
     const data = await getHTML(`https://www.googleapis.com/youtube/v3/search?key=AIzaSyBlO79AaaK7z0HsMRYgOb9uS7dfmsF6NPg&type=video&channelId=${channelid}&part=snippet,id&order=date&maxResults=20`)
     // const file = await ytdl.getInfo(data.items[0].id.videoId,{})
     // console.log(file)
@@ -358,18 +346,35 @@ function(err, response) {
   // console.log(response)
 }
 ); */}
- 
+
+})
+app.post("/switch",form,async(req,res)=>{
+  
+  const user = await User.find({google_id:req.body.id})
+  console.log(user)
+  if(user.length>0){
+      oauth2Client.setCredentials({access_token:'none',refresh_token:user[0].token})
+      var oauth2 = google.oauth2({
+        auth: oauth2Client,
+        version: "v2",
+      });
+      oauth2.userinfo.get(async (err, resp) => {
+          if(err) return console.log(err)
+              console.log(resp)
+      })
+
+      return res.json({status:1,message:"swiched"})
+      
+  }
 })
 app.get("/callback",(req,res)=>{
     const token = req.query.code
     // const infor = axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${token}`)
     // console.log(infor);
     if(token){
-
-    +-
         oauth2Client.getToken(token,(err,tokens )=>{
           if(err) throw err
-          
+
           oauth2Client.setCredentials(tokens)
           var oauth2 = google.oauth2({
             auth: oauth2Client,
@@ -379,7 +384,8 @@ app.get("/callback",(req,res)=>{
             if (err) {
             } else {
               const findUser = await User.find({google_id:res.data.id})
-              
+                console.log(findUser)
+                console.log(res.data)
               if(findUser.length>0){
                 await User.findOneAndUpdate({google_id:res.data.id},{token:tokens.refresh_token})
 
@@ -485,7 +491,7 @@ youtube.videos.insert({
   fs.unlink(videoFilePath,(err)=>{
     if(err) console.log(err)
   })
-  
+
   console.log('Video uploaded. Uploading the thumbnail now.')
   youtube.thumbnails.set({
     videoId: response.data.id,

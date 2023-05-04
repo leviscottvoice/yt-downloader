@@ -43,6 +43,7 @@
     const resp = await fetchdata.json()
     if(resp.status==1){
       const select = document.createElement("select")
+      select.name = "switch"
       const li = document.getElementsByName("opt")
       
       resp.data.map((e)=>{
@@ -56,5 +57,18 @@
 
     }
   }
+  setTimeout(()=>{
+
+    const select = document.getElementsByName("switch")
+    select[0].onchange = async(e)=>{
+      const formdata = new FormData()
+      formdata.append("id",select[0].value)
+      const fetchData = await fetch("/switch",{
+        method:"post",
+        body:formdata
+      })
+      const resp = await fetchData.json()
+    }
+  },2000)
 </script>
 </html>
