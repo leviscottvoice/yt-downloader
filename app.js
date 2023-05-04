@@ -118,7 +118,7 @@ function waitforme(millisec) {
 
 
 app.get("/uploadpop",(req,res)=>{
-  res.render("uploadpop")
+  res.render("uploadPop")
 })
 app.post("/uploadurl",form,async(req,res)=>{
   const urls =  req.body.urls.split(",")
