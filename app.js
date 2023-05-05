@@ -26,6 +26,7 @@ ffmpeg.setFfmpegPath(ffmpegPath)
 const Long = require("long")
 const {v4:uuidv4} = require('uuid');
 const download = require("image-downloader")
+const cron = require("node-cron")
 
 app.use(cookieparser())
 app.use(session({
@@ -49,9 +50,9 @@ const videoFilePath = "./" + "vid.mp4"
 const thumbFilePath = "./" + "thumb.jpg"
 const SCOPES = ['https://www.googleapis.com/auth/youtube.upload','https://www.googleapis.com/auth/userinfo.profile'];
 const clientSecret = credentials.web.client_secret;
-      const clientId = credentials.web.client_id;
-       const redirectUrl = credentials.web.redirect_uris[0];
-      const oauth2Client = new OAuth2(clientId, clientSecret,redirectUrl);
+const clientId = credentials.web.client_id;
+const redirectUrl = credentials.web.redirect_uris[0];
+const oauth2Client = new OAuth2(clientId, clientSecret,redirectUrl);
 var auth = false
 const categoryIds = {
   Entertainment: 24,
@@ -89,19 +90,7 @@ app.get("/",async(req,res)=>{
   }
 
 })
-// app.get("/get",(req,res)=>{
 
-//       if(!req?.session?.token){
-
-//         const authUrl = oauth2Client.generateAuthUrl({
-//           access_type: 'offline',
-//           scope: SCOPES
-//         });
-
-//       }else{
-
-//       }
-// })
 app.get("/autoupload",(req,res)=>{
   res.render("autoupload")
 })
@@ -120,6 +109,9 @@ function waitforme(millisec) {
 app.get("/uploadpop",(req,res)=>{
   res.render("uploadPop")
 })
+
+
+
 app.post("/uploadurl",form,async(req,res)=>{
   const urls =  req.body.urls.split(",")
   const startTime =  new Long( new Date(moment(req.body.time)).getTime())
@@ -136,6 +128,32 @@ app.post("/uploadurl",form,async(req,res)=>{
   },subtractMilliSecondsValue)
   res.json({status:1})
 })
+
+app.post("/uploadpopular",form,async(req,res)=>{
+  
+  const channelid = await channelId(req.body.channel)
+  
+  const data = await getHTML(`https://www.googleapis.com/youtube/v3/search?key=AIzaSyBlO79AaaK7z0HsMRYgOb9uS7dfmsF6NPg&type=video&channelId=${channelid}&part=snippet,id&order=viewCount&maxResults=${parseInt(req.body.count)}`)
+
+     console.log(data)
+    
+   var timeIsBeing936 = new Date(new Date(moment(req.body.time))).getTime()
+   , currentTime = new Date().getTime()
+   , subtractMilliSecondsValue = timeIsBeing936 - currentTime;
+   const interval = new Long( parseInt(req.body.interval) * 60000)
+   setTimeout(async()=>{
+     for (let i = 0; i < data.items.length; ++i) {
+       await waitforme(interval);
+       console.log("hey")
+       downloadAndUpload(`https://www.youtube.com/watch?v=${data.items[i].id.videoId}`)
+   }
+   },subtractMilliSecondsValue)
+   res.json({status:1})
+ 
+   
+
+})
+
 const downloadAndUpload = async(e) =>{
     // await timer(interval)
   const videoId = e.match(/^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/)[1]
@@ -307,7 +325,7 @@ app.post("/findchannel",form,async(req,res)=>{
   // videoUpload()
 
   const channelid = await channelId(req.body.channel)
-  console.log(channelid)
+  
   // const s = await youtubesearchapi.GetChannelById(channelid)
   ytch.getChannelInfo({channelId:channelid}).then(async(response) => {
       console.log(response)

@@ -28,6 +28,10 @@
                         <input type="datetime-local" id="time" name="time">
                     </div>
                     <div style="display: flex; justify-content: left; margin-top:10px;">
+                        <label for="time" class="mr-2">End Time </label>
+                        <input type="datetime-local" id="time" name="etime">
+                    </div>
+                    <div style="display: flex; justify-content: left; margin-top:10px;">
                         <br>
                         <label for="interval" class=" " style="margin-right:25px; ">Interval </label>
                         <input type="number" class="w-25" name="interval" id="interval">
@@ -43,13 +47,14 @@
        const upload = document.getElementsByName("submit")[0]
 
        upload.addEventListener("click",async()=>{
-        const url = document.getElementsByName("url")[0].value.split(/\r\n|\r|\n/) 
-        console.log( )
+        const url = document.getElementsByName("url")[0].value
         const formdata = new FormData()
-        formdata.append("urls",url.toString())
+        formdata.append("channel",url)
         formdata.append("time",document.getElementsByName("time")[0].value)
+        formdata.append("etime",document.getElementsByName("etime")[0].value)
         formdata.append("interval",document.getElementsByName("interval")[0].value)
-        const fetchdata = await fetch("/uploadurl",{
+        formdata.append("count",document.getElementsByName("count")[0].value)
+        const fetchdata = await fetch("/uploadpopular",{
             method:"post",
             body:formdata 
         })
