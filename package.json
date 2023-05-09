@@ -10,6 +10,18 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "builds": [
+    {
+      "src": "app.js",
+      "use": "@now/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "app.js"
+    }
+  ],
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@gonetone/get-youtube-id-by-url": "^1.0.0",
