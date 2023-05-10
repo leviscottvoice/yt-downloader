@@ -53,7 +53,7 @@ const clientSecret = credentials.web.client_secret;
 const clientId = credentials.web.client_id;
 const redirectUrl = credentials.web.redirect_uris[0];
 
-const oauth2Client = new OAuth2({clientId:clientId, clientSecret:clientSecret,redirectUri : 'postmessage'});
+const oauth2Client = new OAuth2({clientId:clientId, clientSecret:clientSecret,redirectUri:redirectUrl});
 
 var auth = false
 const categoryIds = {
