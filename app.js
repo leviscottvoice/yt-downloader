@@ -45,13 +45,16 @@ mongoose.connect(process.env.MONGO_URL,{
 const User = require("./model/users");
 const { cloudfunctions } = require("googleapis/build/src/apis/cloudfunctions");
 const { request } = require("http");
+const { oauth2 } = require("googleapis/build/src/apis/oauth2");
 const videoFilePath = "./" + "vid.mp4"
 const thumbFilePath = "./" + "thumb.jpg"
 const SCOPES = ['https://www.googleapis.com/auth/youtube.upload','https://www.googleapis.com/auth/userinfo.profile'];
 const clientSecret = credentials.web.client_secret;
 const clientId = credentials.web.client_id;
 const redirectUrl = credentials.web.redirect_uris[0];
-const oauth2Client = new OAuth2(clientId, clientSecret,redirectUrl);
+
+const oauth2Client = new OAuth2({clientId:clientId, clientSecret:clientSecret,redirectUri : 'postmessage'});
+
 var auth = false
 const categoryIds = {
   Entertainment: 24,
@@ -78,9 +81,11 @@ return html;
 }
 app.get("/",async(req,res)=>{
   if(!req?.session?.token){
+    
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
-      scope: SCOPES
+      scope: SCOPES,
+      
     });
 -    res.render("login",{url:authUrl})
   }else{
