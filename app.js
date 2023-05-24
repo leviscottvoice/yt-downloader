@@ -26,7 +26,12 @@ const Long = require("long")
 const {v4:uuidv4} = require('uuid');
 const download = require("image-downloader")
 const cron = require("node-cron")
-
+channelId("https://www.youtube.com/ThapaTechnical".replace("@","")).then((e)=>{
+  console.log(e)
+}).catch((err)=>{
+  console.log(err)
+})
+ 
 app.use(cookieparser())
 app.use(session({
   secret:"e6VgtiqH1DwSNFnHWOJcQEp4b7FwGEZB",
@@ -51,7 +56,7 @@ const thumbFilePath = "./" + "thumb.jpg"
 const SCOPES = ['https://www.googleapis.com/auth/youtube.upload','https://www.googleapis.com/auth/userinfo.profile'];
 const clientSecret = credentials.web.client_secret;
 const clientId = credentials.web.client_id;
-const redirectUrl = credentials.web.redirect_uris[0];
+const redirectUrl = credentials.web.redirect_uris[1];
 
 const oauth2Client = new OAuth2({clientId:clientId, clientSecret:clientSecret,redirectUri:redirectUrl});
 
@@ -67,6 +72,151 @@ app.use('/assets', express.static(path.join(__dirname, 'public/assets')))
 
 const str = "https://www.youtube.com/watch?v=b7DrwqoHAGA"
 
+const {executablePath} = require("puppeteer")
+   const login = async() => {
+      puppeteerExtra.use(stealthPlugin());
+      const browser = await puppeteerExtra.launch({ args: ['--no-sandbox',],
+      headless: false,
+      ignoreHTTPSErrors: true,
+  
+      // add this
+      executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe", });
+      // const browser = await puppeteer.launch({ headless: false });
+      const page = await browser.newPage();
+  
+      try {
+      await page.goto('https://accounts.google.com/signin/v2/identifier');
+      await page.type('[type="email"]', 'leviscottvoices@gmail.com',);
+      await page.click('#identifierNext');
+      await page.waitForTimeout(5000);
+  
+      await page.type('[type="password"', "Scott@1234");
+      await page.click('#passwordNext');
+  
+  
+      await page.waitForTimeout(6000);
+    // Sign in to YouTube
+    // await page.goto('https://www.youtube.com/?persist_gl=1&gl=US&persist_hl=1&hl=en');
+    // await page.waitForSelector('a[href="/signin"]');
+    // await page.click('a[href="/signin"]');
+    // await page.waitForSelector('#identifierId');
+    // await page.type('#identifierId', 'leviscottvoices@gmail.com'); // Replace with your YouTube username
+    // await page.click('#identifierNext');
+    // await page.waitForSelector('#password input[name="password"]');
+    // await page.type('#password input[name="password"]', 'Scott@1234'); // Replace with your YouTube password
+    // await page.click('#passwordNext');
+    // await page.waitForNavigation();
+
+    // Go to upload page
+    await page.goto('https://www.youtube.com/upload');
+
+    // Select video file
+    const fileInput = await page.$("input[type='file']");
+    await fileInput.uploadFile('C:/Users/Admin/Desktop/sumit/videoUploader/video2.mp4'); // Replace with the path to your video file
+
+    // Fill in video details
+    await page.waitForSelector('#textbox');
+    const titlebox = await page.$("#textbox");
+    await page.type('#textbox', 'Video Title'); // Replace with your video title
+    await page.type('#textbox', 'Video Description'); // Replace with your video description
+
+    // Set privacy
+    await page.waitForTimeout(50000)
+    const mfk = await page.$("[name='VIDEO_MADE_FOR_KIDS_MFK']")
+    await mfk.evaluate((x)=>{
+      x.click()
+    })
+    await page.waitForTimeout(5000)
+    const next_btn = await page.waitForSelector('#next-button');
+          await next_btn.evaluate((x)=>{
+            x.click()
+          })
+    // await page.click('#next-button');
+    
+    await page.waitForTimeout(15000)
+    const again_next_btn = await page.waitForSelector('#next-button');
+    await again_next_btn.evaluate((x)=>{
+      x.click()
+    })
+    await page.waitForTimeout(5000)
+    const again_next_btn_2 = await page.waitForSelector('#next-button');
+    await again_next_btn_2.evaluate((x)=>{
+      x.click()
+    })
+    await page.waitForTimeout(5000)
+    const again_next_btn_3 = await page.waitForSelector('#next-button');
+    await again_next_btn_3.evaluate((x)=>{
+      x.click()
+    })
+    
+    await page.waitForTimeout(5000)
+
+    await page.click('#done-button');
+    // await page.click('#next-button');
+    // await page.click('#radioLabel');
+    // await page.waitForSelector('#private-label');
+    // await page.click('#private-label');
+
+    // Submit the upload
+
+    // Wait for the upload to complete
+    await page.waitForNavigation();
+
+    console.log('Video uploaded successfully!');
+  } catch (error) {
+    console.error('An error occurred:', error);
+  } finally {
+      // Close the browser
+      await browser.close();
+    }
+  
+      await browser.close();
+  }
+
+
+// const {promptLoginAndGetCookies, uploadVideo} = require('node-apiless-youtube-upload')
+
+// (async () => {
+//     const youtubeUploader = new uploadVideo()
+//     const cookiesPath = process.cwd() + '/cookies_saved.json'
+
+//     // Try loading cookies from disk
+//     try {
+//         await youtubeUploader.loadCookiesFromDisk(cookiesPath)
+
+//         if (!(await youtubeUploader.checkCookiesValidity())) {
+//             throw new Error('Cookies loaded from disk are not valid')
+//         }
+//     } catch(e) {
+//         console.log('Prompting Google login..')
+
+//         // Open a login window for Google account. Cookies will be stored in the youtubeUploader instance
+//         await promptLoginAndGetCookies()
+
+//         // Save cookies
+//         await youtubeUploader.saveCookiesToDisk(cookiesPath)
+//     }
+    
+//     // Upload a video to youtube
+//     await youtubeUploader.uploadVideo({
+//         videoPath: 'C:/Users/gladiatortoise/Desktop/testVideo.mp4',
+//         title: '📡 Automatically Uploaded Video 📡',
+//         description: 'This is a placeholder description.',
+//         thumbnailPath: 'C:/Users/gladiatortoise/Desktop/TestThumbnail.jpg',
+//         visibility: 'unlisted',
+//         monetization: false
+//     })
+// })()
+
+const {upload} = require('youtube-videos-uploader');
+// const onVideoUploadSuccess = (videoUrl) => {
+//  console.log(videoUrl)
+// }
+ const credentialss = { email: 'leviscottvoices@gmail.com', pass: 'Scott@1234', recoveryemail: 'sp43216@gmail.com' }
+ const video2 = { path: __dirname + '\/'  + 'video2.mp4', title: 'title 2', description: 'description 2', thumbnail: __dirname +"\/"+'thumbnail.jpg' }
+  upload (credentialss, [video2],{headless:false}).then((err) => console.log(err)).catch((e)=>{
+   console.log(e)
+  })
 async function getHTML(productURL) {
   const { data: html } = await  axios.get(productURL, {
   headers: {
@@ -278,44 +428,44 @@ app.get("/getusers",async(req,res)=>{
   }
 })
 
-var uploadVideo = async()=>{
+// var uploadVideo = async()=>{
 
-  const users = await User.find()
-  console.log(users)
-  if(users.length>0){
-    users.map(async(e)=>{
-      const channelid = await channelId(e.url)
-
-
-    ytch.getChannelInfo({channelId:channelid}).then(async(response) => {
-
-      if (!response.alertMessage) {
-        // console.log(response)
-
-      const data = await getHTML(`https://www.googleapis.com/youtube/v3/search?key=AIzaSyBlO79AaaK7z0HsMRYgOb9uS7dfmsF6NPg&type=video&channelId=${channelid}&part=snippet,id&order=date&maxResults=20`)
-
-      // const file = await ytdl.getInfo(data.items[0].id.videoId,{})
-      // console.log(file)
-      // const video = await ytdl.chooseFormat(file.formats,{quality:"highest"})
-      // console.log(video)
-      if(moment(data.items[0].snippet.publishedAt).local()>moment().local().subtract(30,"m")){
+//   const users = await User.find()
+//   console.log(users)
+//   if(users.length>0){
+//     users.map(async(e)=>{
+//       const channelid = await channelId(e.url)
 
 
-     const s = await  ytdl.getBasicInfo(data.items[0].id.videoId,{downloadURL: true})
-      // console.log(s)
-      //  res.json({status:1,message:"Channel Found",result:response})
-    }
-  }
-     else {
-       console.log('Channel could not be found.')
-       // throw response.alertMessage
-    }
- }).catch((err) => {
-    console.log(err)
- })
-    })
-  }
-}
+//     ytch.getChannelInfo({channelId:channelid}).then(async(response) => {
+
+//       if (!response.alertMessage) {
+//         // console.log(response)
+
+//       const data = await getHTML(`https://www.googleapis.com/youtube/v3/search?key=AIzaSyBlO79AaaK7z0HsMRYgOb9uS7dfmsF6NPg&type=video&channelId=${channelid}&part=snippet,id&order=date&maxResults=20`)
+
+//       // const file = await ytdl.getInfo(data.items[0].id.videoId,{})
+//       // console.log(file)
+//       // const video = await ytdl.chooseFormat(file.formats,{quality:"highest"})
+//       // console.log(video)
+//       if(moment(data.items[0].snippet.publishedAt).local()>moment().local().subtract(30,"m")){
+
+
+//      const s = await  ytdl.getBasicInfo(data.items[0].id.videoId,{downloadURL: true})
+//       // console.log(s)
+//       //  res.json({status:1,message:"Channel Found",result:response})
+//     }
+//   }
+//      else {
+//        console.log('Channel could not be found.')
+//        // throw response.alertMessage
+//     }
+//  }).catch((err) => {
+//     console.log(err)
+//  })
+//     })
+//   }
+// }
 
 
 
@@ -330,18 +480,19 @@ app.post("/findchannel",form,async(req,res)=>{
 
   const channelid = await channelId(req.body.channel)
   
+  
   // const s = await youtubesearchapi.GetChannelById(channelid)
   ytch.getChannelInfo({channelId:channelid}).then(async(response) => {
       console.log(response)
     if (!response.alertMessage) {
       // console.log(response)
 
-    const data = await getHTML(`https://www.googleapis.com/youtube/v3/search?key=AIzaSyBlO79AaaK7z0HsMRYgOb9uS7dfmsF6NPg&type=video&channelId=${channelid}&part=snippet,id&order=date&maxResults=20`)
+    // const data = await getHTML(`https://www.googleapis.com/youtube/v3/search?key=AIzaSyBlO79AaaK7z0HsMRYgOb9uS7dfmsF6NPg&type=video&channelId=${channelid}&part=snippet,id&order=date&maxResults=20`)
     // const file = await ytdl.getInfo(data.items[0].id.videoId,{})
     // console.log(file)
     // const video = await ytdl.chooseFormat(file.formats,{quality:"highest"})
     // console.log(video)
-   const s = await  ytdl.getBasicInfo(data.items[0].id.videoId,{downloadURL: true})
+  //  const s = await  ytdl.getBasicInfo(data.items[0].id.videoId,{downloadURL: true})
 
     // console.log($("#contents ytd-rich-grid-media div ytd-thumbnail a").attr())
     // $('ytd-rich-item-renderer div ').each((idx,el)=>{
